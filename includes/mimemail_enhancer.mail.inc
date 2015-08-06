@@ -135,6 +135,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
 
   /**
    * Attach images to mail.
+   *
    * Add files in cssContent as inline attachments and replace reference
    * with cid - (mimemail/mimemail.inc:140) _mimemail_replace_files callback.
    *
@@ -164,6 +165,8 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
 
 
   /**
+   * Loads stylesheets for mail less/css.
+   *
    * @param array $message
    *    The message array.
    */
@@ -175,20 +178,19 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
       return;
     }
 
-    $modulePath = drupal_get_path('module', 'mimemail_enhancer');
+    $module_path = drupal_get_path('module', 'mimemail_enhancer');
     $message['params']['mail_theme'] = mailsystem_get_mail_theme();
     $message['params']['mail_theme_path'] = drupal_get_path('theme', $message['params']['mail_theme']);
 
-
-    //collect css files
+    // Collect css files.
     $expr = '#^(' . implode('|', $message["params"]["mail_theme_stylesheets"])
             . ')\.css$#';
     $mail_stylesheets["css"] = file_scan_directory($message['params']['mail_theme_path'], $expr);
     if (!count($mail_stylesheets["css"])) {
-      $mail_stylesheets["css"] = file_scan_directory($modulePath, $expr);
+      $mail_stylesheets["css"] = file_scan_directory($module_path, $expr);
     }
 
-    //collect less files if we have support
+    // Collect less files if we have support.
     if (!count($mail_stylesheets["css"])) {
       if (module_exists("less")) {
         $expr = '#^('
@@ -196,35 +198,34 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
                 . ')\.less$#';
         $mail_stylesheets["less"] = file_scan_directory($message['params']['mail_theme_path'], $expr);
         if (!count($mail_stylesheets["less"])) {
-          $mail_stylesheets["less"] = file_scan_directory($modulePath, $expr);
+          $mail_stylesheets["less"] = file_scan_directory($module_path, $expr);
         }
-        //preprocess less files
+        // Preprocess less files.
         if (count($mail_stylesheets["less"])) {
           $styles = [
             '#items' => [],
           ];
           /** @var object $lessFile */
-          foreach ($mail_stylesheets["less"] as $lessKey => $lessFile) {
-            $styles['#items'][$lessKey] = [
+          foreach ($mail_stylesheets["less"] as $less_key => $lessFile) {
+            $styles['#items'][$less_key] = [
               'data' => $lessFile->uri,
             ];
           }
+
           $styles = _less_pre_render($styles);
-          //
-          foreach ($styles['#items'] as $prepocessedLess) {
-            ///$mail_stylesheets["css"][] = $prepocessedLess["less"]["output_file"];
-            $cssFile = str_replace(
+          foreach ($styles['#items'] as $prepocessed_less) {
+            $css_file = str_replace(
               DRUPAL_ROOT
-              . '/', '', drupal_realpath($prepocessedLess["less"]["output_file"])
+              . '/', '', drupal_realpath($prepocessed_less["less"]["output_file"])
             );
-            $info = pathinfo($cssFile);
+            $info = pathinfo($css_file);
             $file = new \stdClass();
-            $file->uri = $cssFile;
+            $file->uri = $css_file;
             $file->filename = $info["basename"];
             $file->name = str_replace(
               '.' . $info["extension"], '', $file->filename
             );
-            $mail_stylesheets["css"][$cssFile] = $file;
+            $mail_stylesheets["css"][$css_file] = $file;
           }
         }
       }
