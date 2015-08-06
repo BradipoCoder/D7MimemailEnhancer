@@ -33,4 +33,5 @@ $modulePath = drupal_get_path('module', 'mimemail_enhancer');
     <script type="text/javascript" src="/<?php print $modulePath; ?>/debug/debug.js"></script>
 </body>
 </html>
-
+<?php
+// pareview.sh is complaining about closing PHP delimiter
