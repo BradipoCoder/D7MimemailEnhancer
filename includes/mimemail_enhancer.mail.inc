@@ -40,10 +40,11 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   protected function prepareMessage(&$message) {
     module_load_include('inc', 'mimemail');
 
-    //@todo - add custom 'pre_process' hook here
+    // @todo - add custom 'pre_process' hook here
     $module = $message['module'];
     $key = $message['key'];
-    $to = $message['to']; //??@what if (like webform) we have comma separated list of to addresses?
+    // ??@what if (like webform) we have comma separated list of to addresses?
+    $to = $message['to'];
     $from = $message['from'];
     $subject = $message['subject'];
 
@@ -56,9 +57,9 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     $site_mail = variable_get('site_mail', ini_get('sendmail_from'));
     $simple_address = variable_get('mimemail_simple_address', 0);
 
-    if(!isset($message["params"]["mail_theme_stylesheets"]) ||
-       !is_array($message["params"]["mail_theme_stylesheets"]) ||
-       !count($message["params"]["mail_theme_stylesheets"])) {
+    if (!isset($message["params"]["mail_theme_stylesheets"])
+       || !is_array($message["params"]["mail_theme_stylesheets"])
+       || !count($message["params"]["mail_theme_stylesheets"])) {
       $message["params"]["mail_theme_stylesheets"] = ["mimemail_enhancer"];
     }
 
@@ -78,7 +79,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
       );
     }
 
-    //checking if plain or html
+    // checking if plain or html
     if (is_object($to) && isset($to->data['mimemail_textonly'])) {
       $plain = $to->data['mimemail_textonly'];
     } else if (is_string($to) && valid_email_address($to)) {
@@ -94,7 +95,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     // Removing newline character introduced by _drupal_wrap_mail_line();
     $message['subject'] = str_replace(array("\n"), '', trim(drupal_html_to_text($subject)));
 
-    //THEME
+    // THEME
     $theme_vars = [
       'module' => $message["module"],
       'key' => $message["key"],
@@ -113,8 +114,8 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     $this->loadStylesheets($message);
     $this->applyStylesheets($message);
 
-    //@todo - add custom 'post_process' hook here
-    //finalize message for sending
+    // @todo - add custom 'post_process' hook here
+    // finalize message for sending
     $this->attachInlineImages($message);
     $plain = $plain || variable_get('mimemail_textonly', 0);
     $from = mimemail_address($from);
