@@ -83,6 +83,3 @@ the process will be interrupted just before the mail would be sent out showing
 you the final mail message with your templates and stylesheets applied.
  
 Make sure you disable this when you are done ;)
-
- 
- 

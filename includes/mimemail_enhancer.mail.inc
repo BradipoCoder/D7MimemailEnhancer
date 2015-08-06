@@ -9,10 +9,11 @@
  * Modify the Drupal mail system to send HTML emails.
  *
  * The correct name for this class should be: MimeMailEnhancerSystem
- * However webform has an ?incomplete? implementation for picking up MailSystemInterface
- * implementations sites/all/modules/contrib/webform/webform.module:3828
- * (hardcoded) and fortunately strpos check can be hacked by ending the class
- * name as: MimeMailSystem -> hence: EnhancedMimeMailSystem
+ * However webform has an ?incomplete? implementation for picking up
+ * MailSystemInterface implementations (hardcoded)
+ * in: sites/all/modules/contrib/webform/webform.module:3828
+ * and fortunately strpos check can be hacked by ending the class
+ * name as: MimeMailSystem -> hence: EnhancedMimeMailSystem.
  */
 class EnhancedMimeMailSystem implements MailSystemInterface {
 
@@ -20,7 +21,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
    * Concatenate and wrap the e-mail body for HTML mails.
    *
    * @param array $message
-   *   A message array, as described in hook_mail_alter() with optional
+   *   A message array, as described in hook_mail_alter() with optional.
    *   parameters described in mimemail_prepare_message().
    *
    *   The $message has alerady passed through all hook_mail_alters
