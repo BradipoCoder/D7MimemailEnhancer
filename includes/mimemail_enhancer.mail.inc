@@ -205,10 +205,10 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
           $styles = [
             '#items' => [],
           ];
-          /** @var object $lessFile */
-          foreach ($mail_stylesheets["less"] as $less_key => $lessFile) {
+          /** @var object $less_file */
+          foreach ($mail_stylesheets["less"] as $less_key => $less_file) {
             $styles['#items'][$less_key] = [
-              'data' => $lessFile->uri,
+              'data' => $less_file->uri,
             ];
           }
 
@@ -246,17 +246,22 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   }
 
   /**
-   * @param string $str - the string to make substitutions on
-   * @param string $pathReference - this must be relative to DRUPAL_ROOT
+   * Convert relative paths to full Drupal paths
+   *
+   * @param string $str
+   *    The string to make substitutions on.
+   * @param string $pathReference
+   *    This must be relative to DRUPAL_ROOT.
+   *
    * @return string
    */
-  protected function correctResourcePaths(string $str, string $pathReference) {
-    //match url(...) strings in css
+  protected function correctResourcePaths($str, $pathReference) {
+    // Match url(...) strings in css.
     preg_match_all('#url\(["\']?(?<respath>[^"\')]+)["\']?\)#', $str, $paths);
     if (isset($paths["respath"]) && count($paths["respath"])) {
-      //make resource paths become the key
+      // Make resource paths become the key.
       $resourcePaths = array_flip($paths["respath"]);
-      //set the correct path as the value
+      // Set the correct path as the value.
       foreach ($resourcePaths as $respath => &$fullpath) {
         $realpath = realpath(
           DRUPAL_ROOT . '/' . $pathReference . '/' . $respath
@@ -269,6 +274,8 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   }
 
   /**
+   * Replace Tokens
+   *
    * @param array $message
    *    The message array.
    */
@@ -276,7 +283,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     $options = ['clear' => FALSE];
     $context = $message["params"];
 
-    //replace tokens
+    // Replace tokens
     $message['to'] = token_replace($message['to'], $context, $options);
     $message['subject'] = token_replace($message['subject'], $context, $options);
     $message['themed_body'] = token_replace($message['themed_body'], $context, $options);
