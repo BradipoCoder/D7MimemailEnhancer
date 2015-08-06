@@ -33,6 +33,26 @@ All images that you use in your stylesheet files (css|less) can have realtive pa
 For now there is no option to make this feature optional.
 
 
+Theming
+-------
+When creating your mail, this module will use the
+`theme(['mimemail_enhancer_message__' . $module .'__'. $key], $theme_vars)`
+call. Whilst `$module` will be the name of the module initiating the mail, the `$key` can be a custom string defined by
+each module. (For example the 'webform' module uses the 'submission' key when sending mails.)
+
+This allows you a great deal of flexibility.  In the above case of the ($module='webform', $key='submission')
+this pattern definition will instruct D7 to look for template files in this order:
+
+- mimemail-enhancer-message--webform--submission.tpl.php
+- mimemail-enhancer-message--webform.tpl.php
+- mimemail-enhancer-message.tpl.php
+
+You can pick up the default 'mimemail-enhancer-message.tpl.php' theme file from the theme folder of this module, copy 
+it into your template directory and do you customizations.
+
+Obviuously, you can always hook into the preprocess of 'mimemail_enhancer_message' and add your own theme_hook_suggestions.
+
+
 Debugging
 ----------
 
