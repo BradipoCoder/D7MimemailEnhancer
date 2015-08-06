@@ -2,8 +2,8 @@
 /** @var array $message */
 
 $modulePath = drupal_get_path('module', 'mimemail_enhancer');
-
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
