@@ -182,52 +182,54 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     $message['params']['mail_theme'] = mailsystem_get_mail_theme();
     $message['params']['mail_theme_path'] = drupal_get_path('theme', $message['params']['mail_theme']);
 
-    // Collect css files.
-    $expr = '#^(' . implode('|', $message["params"]["mail_theme_stylesheets"])
-            . ')\.css$#';
-    $mail_stylesheets["css"] = file_scan_directory($message['params']['mail_theme_path'], $expr);
-    if (!count($mail_stylesheets["css"])) {
-      $mail_stylesheets["css"] = file_scan_directory($module_path, $expr);
-    }
+    $mail_stylesheets = [];
 
     // Collect less files if we have support.
-    if (!count($mail_stylesheets["css"])) {
-      if (module_exists("less")) {
-        $expr = '#^('
-                . implode('|', $message["params"]["mail_theme_stylesheets"])
-                . ')\.less$#';
-        $mail_stylesheets["less"] = file_scan_directory($message['params']['mail_theme_path'], $expr);
-        if (!count($mail_stylesheets["less"])) {
-          $mail_stylesheets["less"] = file_scan_directory($module_path, $expr);
-        }
-        // Preprocess less files.
-        if (count($mail_stylesheets["less"])) {
-          $styles = [
-            '#items' => [],
+    if (module_exists("less")) {
+      $expr = '#^('
+              . implode('|', $message["params"]["mail_theme_stylesheets"])
+              . ')\.less$#';
+      $mail_stylesheets["less"] = file_scan_directory($message['params']['mail_theme_path'], $expr);
+      if (!count($mail_stylesheets["less"])) {
+        $mail_stylesheets["less"] = file_scan_directory($module_path, $expr);
+      }
+      // Preprocess less files.
+      if (count($mail_stylesheets["less"])) {
+        $styles = [
+          '#items' => [],
+        ];
+        /** @var object $less_file */
+        foreach ($mail_stylesheets["less"] as $less_key => $less_file) {
+          $styles['#items'][$less_key] = [
+            'data' => $less_file->uri,
           ];
-          /** @var object $less_file */
-          foreach ($mail_stylesheets["less"] as $less_key => $less_file) {
-            $styles['#items'][$less_key] = [
-              'data' => $less_file->uri,
-            ];
-          }
-
-          $styles = _less_pre_render($styles);
-          foreach ($styles['#items'] as $prepocessed_less) {
-            $css_file = str_replace(
-              DRUPAL_ROOT
-              . '/', '', drupal_realpath($prepocessed_less["less"]["output_file"])
-            );
-            $info = pathinfo($css_file);
-            $file = new \stdClass();
-            $file->uri = $css_file;
-            $file->filename = $info["basename"];
-            $file->name = str_replace(
-              '.' . $info["extension"], '', $file->filename
-            );
-            $mail_stylesheets["css"][$css_file] = $file;
-          }
         }
+
+        $styles = _less_pre_render($styles);
+        foreach ($styles['#items'] as $prepocessed_less) {
+          $css_file = str_replace(
+            DRUPAL_ROOT
+            . '/', '', drupal_realpath($prepocessed_less["less"]["output_file"])
+          );
+          $info = pathinfo($css_file);
+          $file = new \stdClass();
+          $file->uri = $css_file;
+          $file->filename = $info["basename"];
+          $file->name = str_replace(
+            '.' . $info["extension"], '', $file->filename
+          );
+          $mail_stylesheets["css"][$css_file] = $file;
+        }
+      }
+    }
+
+    // Collect css files.
+    if (!count($mail_stylesheets["css"])) {
+      $expr = '#^(' . implode('|', $message["params"]["mail_theme_stylesheets"])
+              . ')\.css$#';
+      $mail_stylesheets["css"] = file_scan_directory($message['params']['mail_theme_path'], $expr);
+      if (!count($mail_stylesheets["css"])) {
+        $mail_stylesheets["css"] = file_scan_directory($module_path, $expr);
       }
     }
 
