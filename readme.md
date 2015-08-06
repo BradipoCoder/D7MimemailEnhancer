@@ -45,4 +45,7 @@ To enable the 'Theme Debug' option, you need to go to the configuration page of 
  will be interrupted just before the mail would be sent out showing you the final mail message with your templates and stylesheets
  applied.
  
+Make sure you disable this when you are done ;)
+
+ 
  
