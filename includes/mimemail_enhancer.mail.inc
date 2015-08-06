@@ -37,7 +37,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
    * Prepares the message.
    *
    * @param array $message
-   *    The message array
+   *    The message array.
    */
   protected function prepareMessage(array &$message) {
     module_load_include('inc', 'mimemail');
@@ -82,7 +82,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
       );
     }
 
-    // Checking if plain or html
+    // Checking if plain or html.
     if (is_object($to) && isset($to->data['mimemail_textonly'])) {
       $plain = $to->data['mimemail_textonly'];
     }
@@ -101,7 +101,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     // Removing newline character introduced by _drupal_wrap_mail_line().
     $message['subject'] = str_replace(array("\n"), '', trim(drupal_html_to_text($subject)));
 
-    // THEME
+    // THEME.
     $theme_vars = [
       'module' => $message["module"],
       'key' => $message["key"],
@@ -134,20 +134,23 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   }
 
   /**
-   * Attach images to mail
+   * Attach images to mail.
+   * Add files in cssContent as inline attachments and replace reference
+   * with cid - (mimemail/mimemail.inc:140) _mimemail_replace_files callback.
    *
    * @param array $message
-   *    The message array
+   *    The message array.
    */
   protected function attachInlineImages(array &$message) {
-    //add files in cssContent as inline attachments and replace reference with cid
-    //using (mimemail/mimemail.inc:140) _mimemail_replace_files callback
     $pattern = '/(url\([\'"]?)([^\')"]+)([\'"]?\))/mis';
     $message['themed_body_cids'] = preg_replace_callback($pattern, '_mimemail_replace_files', $message['themed_body']);
   }
 
   /**
+   * Applies the loaded styles to the mail body using mimemail_compress.
+   *
    * @param array $message
+   *    The message array.
    */
   protected function applyStylesheets(array &$message) {
     if (isset($message['params']['mail_theme_css'])) {
@@ -162,6 +165,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
 
   /**
    * @param array $message
+   *    The message array.
    */
   protected function loadStylesheets(array &$message) {
     if (!isset($message["params"]["mail_theme_stylesheets"])
@@ -265,6 +269,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
 
   /**
    * @param array $message
+   *    The message array.
    */
   protected function replaceTokens(array &$message) {
     $options = ['clear' => FALSE];
@@ -278,6 +283,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
 
   /**
    * @param array $message
+   *    The message array.
    */
   protected function checkAttachments(array &$message) {
     //attachments -  @todo: check this
@@ -332,6 +338,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
 
   /**
    * @param array $message
+   *    The message array.
    */
   protected function dumpDebugInfo(array $message) {
     require(drupal_get_path('module', 'mimemail_enhancer')
