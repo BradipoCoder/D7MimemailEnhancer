@@ -41,7 +41,6 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     module_load_include('inc', 'mimemail');
 
     //@todo - add custom 'pre_process' hook here
-
     $module = $message['module'];
     $key = $message['key'];
     $to = $message['to']; //??@what if (like webform) we have comma separated list of to addresses?
@@ -115,9 +114,6 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     $this->applyStylesheets($message);
 
     //@todo - add custom 'post_process' hook here
-
-
-
     //finalize message for sending
     $this->attachInlineImages($message);
     $plain = $plain || variable_get('mimemail_textonly', 0);
