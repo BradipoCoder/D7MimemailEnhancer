@@ -34,9 +34,10 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   }
 
   /**
-   * @param array $message
+   * Prepares the message.
    *
-   * @return array
+   * @param array $message
+   *    The message array
    */
   protected function prepareMessage(array &$message) {
     module_load_include('inc', 'mimemail');
@@ -81,11 +82,11 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
       );
     }
 
-    // checking if plain or html
+    // Checking if plain or html
     if (is_object($to) && isset($to->data['mimemail_textonly'])) {
       $plain = $to->data['mimemail_textonly'];
     }
-    else if (is_string($to) && valid_email_address($to)) {
+    elseif (is_string($to) && valid_email_address($to)) {
       if (is_object($account = user_load_by_mail($to))
           && isset($account->data['mimemail_textonly'])
       ) {
@@ -97,7 +98,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
       $plain = FALSE;
     }
 
-    // Removing newline character introduced by _drupal_wrap_mail_line();
+    // Removing newline character introduced by _drupal_wrap_mail_line().
     $message['subject'] = str_replace(array("\n"), '', trim(drupal_html_to_text($subject)));
 
     // THEME
@@ -112,20 +113,20 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     ];
     $message['themed_body'] = theme($hook, $theme_vars);
 
-    //do stuff with message
+    // Do stuff with message.
     $this->replaceTokens($message);
     $this->checkAttachments($message);
     $this->loadStylesheets($message);
     $this->applyStylesheets($message);
 
     // @todo - add custom 'post_process' hook here
-    // finalize message for sending
+    // Finalize message for sending.
     $this->attachInlineImages($message);
     $plain = $plain || variable_get('mimemail_textonly', 0);
     $from = mimemail_address($from);
     $mail = mimemail_html_body($message['themed_body_cids'], $subject, $plain, $plaintext, $attachments);
     $headers = array_merge($message['headers'], $headers, $mail['headers']);
-    //
+
     $message['from'] = $from;
     $message['to'] = mimemail_address($to, $simple_address);
     $message['body'] = $mail['body'];
@@ -133,9 +134,12 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   }
 
   /**
+   * Attach images to mail
+   *
    * @param array $message
+   *    The message array
    */
-  protected function attachInlineImages(&$message) {
+  protected function attachInlineImages(array &$message) {
     //add files in cssContent as inline attachments and replace reference with cid
     //using (mimemail/mimemail.inc:140) _mimemail_replace_files callback
     $pattern = '/(url\([\'"]?)([^\')"]+)([\'"]?\))/mis';
@@ -145,7 +149,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   /**
    * @param array $message
    */
-  protected function applyStylesheets(&$message) {
+  protected function applyStylesheets(array &$message) {
     if (isset($message['params']['mail_theme_css'])) {
       $mail_css = $message['params']['mail_theme_css'];
       $mail_css = preg_replace('|\{|', "\n{\n", $mail_css);
@@ -159,7 +163,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   /**
    * @param array $message
    */
-  protected function loadStylesheets(&$message) {
+  protected function loadStylesheets(array &$message) {
     if (!isset($message["params"]["mail_theme_stylesheets"])
         || !is_array($message["params"]["mail_theme_stylesheets"])
         || !count($message["params"]["mail_theme_stylesheets"])
@@ -241,7 +245,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
    * @param string $pathReference - this must be relative to DRUPAL_ROOT
    * @return string
    */
-  protected function correctResourcePaths($str, $pathReference) {
+  protected function correctResourcePaths(string $str, string $pathReference) {
     //match url(...) strings in css
     preg_match_all('#url\(["\']?(?<respath>[^"\')]+)["\']?\)#', $str, $paths);
     if (isset($paths["respath"]) && count($paths["respath"])) {
@@ -262,7 +266,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   /**
    * @param array $message
    */
-  protected function replaceTokens(&$message) {
+  protected function replaceTokens(array &$message) {
     $options = ['clear' => FALSE];
     $context = $message["params"];
 
@@ -275,7 +279,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   /**
    * @param array $message
    */
-  protected function checkAttachments(&$message) {
+  protected function checkAttachments(array &$message) {
     //attachments -  @todo: check this
     /*
     // Prepare the array of the attachments.
@@ -329,7 +333,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   /**
    * @param array $message
    */
-  protected function dumpDebugInfo($message) {
+  protected function dumpDebugInfo(array $message) {
     require(drupal_get_path('module', 'mimemail_enhancer')
             . '/debug/debug.php');
   }
