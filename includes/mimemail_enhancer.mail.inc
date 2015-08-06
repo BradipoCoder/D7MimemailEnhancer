@@ -246,7 +246,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   }
 
   /**
-   * Convert relative paths to full Drupal paths
+   * Convert relative paths to full Drupal paths.
    *
    * @param string $str
    *    The string to make substitutions on.
