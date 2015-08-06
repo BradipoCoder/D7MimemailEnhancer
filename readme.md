@@ -10,8 +10,10 @@ This module wants to give developers the following enhancements respect to mimem
 
 Configuration
 --------------
-- Enable module
-- xdd
+- **Enable module**
+- **Configure "Mail System"** - set 'EnhancedMimeMailSystem' class for all dropdowns
+- **Configure "Mime Mail"** - set 'E-mail format' to 'Full HTML'
+
 
 Less support
 -------------
