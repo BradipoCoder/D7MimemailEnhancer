@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * Implements hook_enable().
+ */
+function mimemail_enhancer_enable() {
+  $mail_systems = [
+    mailsystem_default_id() =>  'EnhancedMimeMailSystem',
+    'mimemail' =>               'EnhancedMimeMailSystem',
+  ];
+
+  //webform sets a global variable for html mails:
+  //$GLOBALS['conf']['mail_system']['webform'] = $enable; (MimeMailSystem)
+  if(module_exists('webform')) {
+    $mail_systems["webform"] = 'EnhancedMimeMailSystem';
+  }
+
+  mailsystem_set($mail_systems);
+}
+
+/**
+ * Implements hook_disable().
+ */
+function mimemail_enhancer_disable() {
+  $mail_system = module_exists('mimemail') ? 'MimeMailSystem' : mailsystem_default_value();
+  mailsystem_set(
+    [
+      mailsystem_default_id() =>  $mail_system,
+      'mimemail' =>               $mail_system,
+    ]
+  );
+  //remove this anyways
+  mailsystem_clear(array('webform' => ''));
+}
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function mimemail_enhancer_uninstall() {
+  $variables = array(
+    'mimemail_enhancer_theme_debug',
+    'mimemail_enhancer_debuggers',
+  );
+  foreach ($variables as $variable) {
+    variable_del($variable);
+  }
+}

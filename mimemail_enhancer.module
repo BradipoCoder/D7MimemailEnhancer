@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * Implements hook_theme().
+ */
+function mimemail_enhancer_theme() {
+  module_load_include('inc', 'mimemail_enhancer', 'theme/mimemail_enhancer.theme');
+  return mimemail_enhancer_theme_theme();
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mimemail_enhancer_menu() {
+  $path = drupal_get_path('module', 'mimemail_enhancer') . '/includes';
+  return [
+    'admin/config/system/mimemail_enhancer' => [
+      'title' => 'Mime Mail Enhancer',
+      'description' => 'Manage Mime Mail Enhancer system settings',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('mimemail_enhancer_admin_settings'),
+      'access arguments' => array('administer site configuration'),
+      'file' => 'mimemail_enhancer.admin.inc',
+      'file path' => $path,
+    ]
+  ];
+}

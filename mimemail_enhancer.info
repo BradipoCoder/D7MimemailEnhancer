@@ -1,0 +1,13 @@
+name = MimeMail Enhancer
+description = Provides enhanced MimeMail features
+package = Mail
+core = 7.x
+
+configure = admin/config/system/mimemail_enhancer
+
+dependencies[] = mimemail
+dependencies[] = mimemail_compress
+
+files[] = includes/mimemail_enhancer.mail.inc
+
+
