@@ -1,0 +1,105 @@
+body {
+  width: 100%;
+  background-color: #f2f2f2;
+  padding: 5px 0;
+}
+body #center {
+  width: 900px;
+  margin: 0 auto;
+}
+body #center #main .header .teaser {
+  font-size: 9px;
+  padding-left: 5px;
+  color: #ababab;
+  margin-bottom: 25px;
+}
+body #center #main .header .send-date {
+  text-align: right;
+  padding-right: 5px;
+  font-size: 11px;
+  color: #ababab;
+}
+body #center #main .footer {
+  margin-bottom: 50px;
+}
+body #center #main .footer .info {
+  text-align: right;
+  padding-right: 5px;
+  font-size: 11px;
+  color: #ababab;
+}
+body #center #main .footer .info a {
+  color: #ababab;
+  text-decoration: none;
+}
+body #center #main .content div,
+body #center #main .content span,
+body #center #main .content label {
+  color: #343434;
+}
+body #center #main .content h1.title {
+  font-size: x-large;
+  color: #ababab;
+}
+body #center #main .content .body fieldset {
+  margin-bottom: 25px;
+}
+body #center #main .content .body label {
+  font-weight: bold;
+}
+body #center #main table.structure {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+body #center #main table.structure td.left {
+  width: 9px;
+}
+body #center #main table.structure td.right {
+  width: 9px;
+}
+body #center #main table.structure tr.top {
+  height: 9px;
+  line-height: 9px;
+}
+body #center #main table.structure tr.top td.left {
+  background-image: url("../images/structure/tbl_top_left.png");
+  background-repeat: no-repeat;
+}
+body #center #main table.structure tr.top td.center {
+  background-image: url("../images/structure/tbl_top_center.png");
+  background-repeat: repeat-x;
+}
+body #center #main table.structure tr.top td.right {
+  background-image: url("../images/structure/tbl_top_right.png");
+  background-repeat: no-repeat;
+}
+body #center #main table.structure tr.middle td.left {
+  background-image: url("../images/structure/tbl_middle_left.png");
+  background-repeat: repeat-y;
+}
+body #center #main table.structure tr.middle td.center {
+  background-image: url("../images/structure/tbl_middle_center.png");
+  background-repeat: repeat;
+  padding: 25px;
+}
+body #center #main table.structure tr.middle td.right {
+  background-image: url("../images/structure/tbl_middle_right.png");
+  background-repeat: repeat-y;
+}
+body #center #main table.structure tr.bottom {
+  height: 12px;
+  line-height: 12px;
+}
+body #center #main table.structure tr.bottom td.left {
+  background-image: url("../images/structure/tbl_bottom_left.png");
+  background-repeat: no-repeat;
+}
+body #center #main table.structure tr.bottom td.center {
+  background-image: url("../images/structure/tbl_bottom_center.png");
+  background-repeat: repeat-x;
+}
+body #center #main table.structure tr.bottom td.right {
+  background-image: url("../images/structure/tbl_bottom_right.png");
+  background-repeat: no-repeat;
+}

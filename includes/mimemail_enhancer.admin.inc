@@ -26,7 +26,7 @@ function mimemail_enhancer_admin_settings() {
     '#title'          => t('Theme Debuggers'),
     '#description'    => t('Select the Theme Debuggers - only administrators are listed.'),
     '#attributes'     => [
-      'style' => 'min-width:300px;'
+      'style' => 'min-width:400px;'
     ],
   ];
 
@@ -41,7 +41,7 @@ function _mimemail_enhancer_get_admin_users() {
   $users = entity_load('user');
   /** @var object $user */
   foreach($users as $user) {
-    if(isset($user->roles) && in_array('administrator', $user->roles)) {
+    if(isset($user->roles) && (in_array('administrator', $user->roles) || in_array('master', $user->roles))) {
       $answer[$user->uid] = $user->name;
     }
   }

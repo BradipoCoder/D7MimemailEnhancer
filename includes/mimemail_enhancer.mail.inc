@@ -69,6 +69,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     if (is_array($message['body'])) {
       $message['body'] = implode("\n\n", $message['body']);
     }
+    $message['body'] = nl2br($message['body']);
 
     // Override site mails default sender when using default engine.
     if ((empty($from) || $from == $site_mail)
@@ -337,7 +338,7 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
         die();
       }
     }
-    //send the messgae
+    //send the message
     $engine = variable_get('mimemail_engine', 'mimemail');
     $mailengine = $engine . '_mailengine';
     if (!$engine || !function_exists($mailengine)) {

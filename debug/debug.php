@@ -3,6 +3,8 @@
  *  Debug page
  */
 
+
+
 /** @var array $TV - Template Variables */
 $TV = get_defined_vars();
 /** @var string $modulePath */
@@ -15,6 +17,7 @@ $modulePath = drupal_get_path('module', 'mimemail_enhancer');
     <link type="text/css" rel="stylesheet" href="/<?php print $modulePath; ?>/debug/debug.css" />
 </head>
 <body>
+
     <h1>Mime Mail Enhancer Debug Page</h1>
 
     <hr />
