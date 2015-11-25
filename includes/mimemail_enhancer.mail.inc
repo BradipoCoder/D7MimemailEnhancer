@@ -69,7 +69,8 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     if (is_array($message['body'])) {
       $message['body'] = implode("\n\n", $message['body']);
     }
-    $message['body'] = nl2br($message['body']);
+
+    //$message['body'] = nl2br($message['body']);
 
     // Override site mails default sender when using default engine.
     if ((empty($from) || $from == $site_mail)
@@ -125,12 +126,12 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
     $this->attachInlineImages($message);
     $plain = $plain || variable_get('mimemail_textonly', 0);
     $from = mimemail_address($from);
-    $mail = mimemail_html_body($message['themed_body_cids'], $subject, $plain, $plaintext, $attachments);
-    $headers = array_merge($message['headers'], $headers, $mail['headers']);
+    $mimemailHtmlBody = mimemail_html_body($message['themed_body_cids'], $subject, $plain, $plaintext, $attachments);
+    $headers = array_merge($message['headers'], $headers, $mimemailHtmlBody['headers']);
 
     $message['from'] = $from;
     $message['to'] = mimemail_address($to, $simple_address);
-    $message['body'] = $mail['body'];
+    $message['body'] = $mimemailHtmlBody['body'];
     $message['headers'] = mimemail_headers($headers, $from);
   }
 
@@ -319,7 +320,11 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
   /**
    * Send the message
    *
-   * @todo: for now we are using mimemail engine send - do we need our own?
+   * * Due to bug in Smtp module's mail method where it disassembles mail created by mimemail incorrectly
+   * @read: https://www.drupal.org/node/1200142 @ Alternative Approach: Mail System + SMTP + Mime Mail
+   * ... "However, currently the Mime Mail module does not properly send file attachments via the SMTP mail system."...
+   * sending mail through smtp module will fail with "Message body empty"
+   * So we need to use custom sending method
    *
    * @param array $message
    *   A message array, as described in hook_mail_alter() with optional
@@ -338,14 +343,253 @@ class EnhancedMimeMailSystem implements MailSystemInterface {
         die();
       }
     }
-    //send the message
-    $engine = variable_get('mimemail_engine', 'mimemail');
-    $mailengine = $engine . '_mailengine';
-    if (!$engine || !function_exists($mailengine)) {
+
+    $sent = FALSE;
+    if (module_exists("smtp")) {
+      $sent = $this->mail_smtp($message);
+    }
+    else {
+      //send the message normally with mimemail
+      $engine = variable_get('mimemail_engine', 'mimemail');
+      $mailengine = $engine . '_mailengine';
+      if ($engine && function_exists($mailengine)) {
+        $sent = $mailengine('send', $message);
+      }
+    }
+    return $sent;
+  }
+
+  /**
+   * @read: read notes on mail() method
+   * @param array $message
+   * @return bool
+   */
+  protected function mail_smtp(array $message) {
+    $to = $message['to'];
+    $from = $message['from'];
+    $body = $message['body'];
+    $headers = $message['headers'];
+    $subject = $message['subject'];
+
+    // Create a new PHPMailer object - autoloaded from registry.
+    $mailer = new PHPMailer();
+    if (variable_get('smtp_debugging', 0) == 1) {
+      $mailer->SMTPDebug = TRUE;
+    }
+
+    // Set the from name.
+    $from_name = variable_get('smtp_fromname', variable_get('site_name', ''));
+
+    //Fix reply-to issue.
+    $properfrom = variable_get('site_mail', '');
+    if (!empty($properfrom)) {
+      $headers['From'] = $properfrom;
+    }
+    if (!isset($headers['Reply-To']) || empty($headers['Reply-To'])) {
+      if (strpos($from, '<')) {
+        $reply = preg_replace('/>.*/', '', preg_replace('/.*</', '', $from));
+      }
+      else {
+        $reply = $from;
+      }
+      $headers['Reply-To'] = $reply;
+    }
+
+    // Blank value will let the e-mail address appear.
+
+    if ($from == NULL || $from == '') {
+      // If from e-mail address is blank, use smtp_from config option.
+      if (($from = variable_get('smtp_from', '')) == '') {
+        // If smtp_from config option is blank, use site_email.
+        if (($from = variable_get('site_mail', '')) == '') {
+          drupal_set_message(t('There is no submitted from address.'), 'error');
+          watchdog('smtp', 'There is no submitted from address.', array(), WATCHDOG_ERROR);
+          return FALSE;
+        }
+      }
+    }
+    if (preg_match('/^"?.*"?\s*<.*>$/', $from)) {
+      // . == Matches any single character except line break characters \r and \n.
+      // * == Repeats the previous item zero or more times.
+      $from_name = preg_replace('/"?([^("\t\n)]*)"?.*$/', '$1', $from); // It gives: Name
+      $from = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $from); // It gives: name@domain.tld
+    }
+    elseif (!valid_email_address($from)) {
+      drupal_set_message(t('The submitted from address (@from) is not valid.', array('@from' => $from)), 'error');
+      watchdog('smtp', 'The submitted from address (@from) is not valid.', array('@from' => $from), WATCHDOG_ERROR);
       return FALSE;
     }
-    return $mailengine('send', $message);
+
+    // Set mailer values
+    $mailer->From = $from;
+    $mailer->FromName = $from_name;
+    $mailer->Sender = $from;
+
+    // Create the list of 'To:' recipients.
+    $torecipients = explode(',', $to);
+    foreach ($torecipients as $torecipient) {
+      if (strpos($torecipient, '<') !== FALSE) {
+        $toparts = explode(' <', $torecipient);
+        $toname = $toparts[0];
+        $toaddr = rtrim($toparts[1], '>');
+      }
+      else {
+        $toname = '';
+        $toaddr = $torecipient;
+      }
+      $mailer->AddAddress($toaddr, $toname);
+    }
+
+    // Set Headers
+    foreach ($headers as $headerKey => $headerValue) {
+      switch (drupal_strtolower($headerKey)) {
+        case 'from':
+          if ($from == NULL or $from == '') {
+            $mailer->From = $headerValue;
+            $mailer->FromName = '';
+            $mailer->Sender = $headerValue;
+          }
+          break;
+
+        case 'content-type':
+          $mailer->ContentType = $headerValue;
+          break;
+
+        case 'reply-to':
+          // Only add a "reply-to" if it's not the same as "return-path".
+          if ($headerValue != $headers['Return-Path']) {
+            if (strpos($headerValue, '<') !== FALSE) {
+              $replyToParts = explode('<', $headerValue);
+              $replyToName = trim($replyToParts[0]);
+              $replyToName = trim($replyToName, '"');
+              $replyToAddr = rtrim($replyToParts[1], '>');
+              $mailer->AddReplyTo($replyToAddr, $replyToName);
+            }
+            else {
+              $mailer->AddReplyTo($headerValue);
+            }
+          }
+          break;
+
+        case 'content-transfer-encoding':
+          $mailer->Encoding = $headerValue;
+          break;
+
+        case 'return-path':
+        case 'mime-version':
+        case 'x-mailer':
+          // Let PHPMailer specify these.
+          break;
+
+        case 'errors-to':
+          $mailer->AddCustomHeader('Errors-To: ' . $headerValue);
+          break;
+
+        case 'cc':
+          $ccrecipients = explode(',', $headerValue);
+          foreach ($ccrecipients as $ccrecipient) {
+            if (strpos($ccrecipient, '<') !== FALSE) {
+              $ccparts = explode(' <', $ccrecipient);
+              $ccname = $ccparts[0];
+              $ccaddr = rtrim($ccparts[1], '>');
+            }
+            else {
+              $ccname = '';
+              $ccaddr = $ccrecipient;
+            }
+            $mailer->AddCC($ccaddr, $ccname);
+          }
+          break;
+
+        case 'bcc':
+          $bccrecipients = explode(',', $headerValue);
+          foreach ($bccrecipients as $bccrecipient) {
+            if (strpos($bccrecipient, '<') !== FALSE) {
+              $bccparts = explode(' <', $bccrecipient);
+              $bccname = $bccparts[0];
+              $bccaddr = rtrim($bccparts[1], '>');
+            }
+            else {
+              $bccname = '';
+              $bccaddr = $bccrecipient;
+            }
+            $mailer->AddBCC($bccaddr, $bccname);
+          }
+          break;
+
+        default:
+          // The header key is not special - add it as is.
+          $mailer->AddCustomHeader($headerKey . ': ' . $headerValue);
+          break;
+      }
+    }
+
+    // Add the message's subject.
+    $mailer->Subject = $subject;
+
+    // Add the message's body - this has already been prepared by mimemailer already
+    $mailer->Body = $body;
+
+    // Process additional mimemail attachments
+    if (isset($message['params']['attachments'])) {
+      foreach ($message['params']['attachments'] as $attachment) {
+        if (isset($attachment['filecontent'])) {
+          $mailer->AddStringAttachment($attachment['filecontent'], $attachment['filename'], 'base64', $attachment['filemime']);
+        }
+        if (isset($attachment['filepath'])) {
+          $mailer->AddAttachment($attachment['filepath'], $attachment['filename'], 'base64', $attachment['filemime']);
+        }
+      }
+    }
+
+    // Set the authentication settings.
+    $username = variable_get('smtp_username', '');
+    $password = variable_get('smtp_password', '');
+
+    // If username and password are given, use SMTP authentication.
+    if ($username != '' && $password != '') {
+      $mailer->SMTPAuth = TRUE;
+      $mailer->Username = $username;
+      $mailer->Password = $password;
+    }
+
+
+    // Set the protocol prefix for the smtp host.
+    switch (variable_get('smtp_protocol', 'standard')) {
+      case 'ssl':
+        $mailer->SMTPSecure = 'ssl';
+        break;
+
+      case 'tls':
+        $mailer->SMTPSecure = 'tls';
+        break;
+
+      default:
+        $mailer->SMTPSecure = '';
+    }
+
+    // Set other connection settings.
+    $mailer->Host = variable_get('smtp_host', '') . ';' . variable_get('smtp_hostbackup', '');
+    $mailer->Port = variable_get('smtp_port', '25');
+    $mailer->Mailer = 'smtp';
+
+    $sent = $mailer->Send();
+    if(!$sent) {
+      watchdog(
+        'EnhancedMimeMailer', 'Error sending e-mail from @from to @to : !error_message', array(
+        '@from' => $from,
+        '@to' => $to,
+        '!error_message' => $mailer->ErrorInfo
+      ), WATCHDOG_ERROR
+      );
+    }
+
+    //echo '<hr /><pre>HEADERS: ' . print_r($message['headers'], TRUE) . '</pre>';
+    //echo '<hr /><pre>MAILER: ' . print_r($mailer, TRUE) . '</pre>';
+    watchdog("EnhancedMimeMailer", "Message was sent!");
+    return $sent;
   }
+
 
   /**
    * @param array $message
